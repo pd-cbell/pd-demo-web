@@ -18,6 +18,9 @@ The PD Demo Generator is a Flask-based web application designed to generate and 
     - A `repeat_schedule` for major and partial incidents (defining `repeat_count` and `repeat_offset`) to simulate a total of 50–70 events over 420 seconds.
     - For major incidents, one event is flagged with `"major_failure": true`.
 
+- **Event Sending:**
+  - Send generated event payloads using the built-in event sender endpoint to simulate live incident events in your demos.
+
 - **Preview & Editing Interface:**
   - View generated narratives and event payloads in an organization-specific file browser.
   - Edit and download files directly from the web interface.
@@ -58,7 +61,7 @@ PD-Demo-Generator-Web/
 3. **Install Dependencies:**
 
    ```bash
-   pip install flask langchain openai
+   pip install flask langchain openai langchain_community
    ```
 
    *Note:* Ensure any additional dependencies are installed as needed.
