@@ -34,12 +34,18 @@ The PD Demo Generator is a Flask-based web application designed to generate and 
 PD-Demo-Generator-Web/
 ├── app.py                  # Main Flask application
 ├── utils.py                # Contains logic for narrative and event generation
+├── event_sender.py         # Logic for sending event payloads
 ├── templates/
-│   ├── index.html          # Web dashboard and form input interface
-│   └── preview.html        # File browser and editing interface for generated outputs
-├── generated_files/        # Output directory for narratives and events (auto-generated)
-├── readme.md               # Project overview and documentation
-└── .gitignore              # Git ignore file
+│   ├── event_sender_results.html  # Results page for sent events
+│   ├── event_sender.html          # Form to send events
+│   ├── index.html                 # Web dashboard and form input interface
+│   └── preview.html               # File browser and editing interface for generated outputs
+├── static/                # Static assets (CSS, JS, images)
+├── generated_files/       # Output directory for narratives and events (auto-generated)
+│   ├── OrganizationA/
+│   └── OrganizationB/
+├── readme.md              # Project overview and documentation
+└── .gitignore             # Git ignore file
 ```
 
 ## Installation
