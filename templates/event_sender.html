@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Event Sender</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+</head>
+<body>
+<div class="container mt-4">
+  <h1>Event Sender</h1>
+  <form method="POST" action="{{ url_for('event_sender_bp.event_sender') }}">
+    <div class="form-group">
+      <label for="organization">Organization</label>
+      <select class="form-control" id="organization" name="organization" required>
+        <option value="">Select Organization</option>
+        {% for org in organizations %}
+        <option value="{{ org }}">{{ org }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="filename">Event File</label>
+      <select class="form-control" id="filename" name="filename" required>
+        <option value="">Select a file</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="routing_key">PagerDuty Routing Key</label>
+      <input type="text" class="form-control" id="routing_key" name="routing_key" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Send Events</button>
+  </form>
+</div>
+<script>
+  // When organization is selected, fetch event files
+  $("#organization").change(function(){
+      var org = $(this).val();
+      if(org){
+          $.getJSON("/get_files/" + org, function(data){
+              var options = '<option value="">Select a file</option>';
+              $.each(data, function(i, file){
+                  options += '<option value="'+file+'">'+file+'</option>';
+              });
+              $("#filename").html(options);
+          });
+      } else {
+          $("#filename").html('<option value="">Select a file</option>');
+      }
+  });
+</script>
+</body>
+</html>
