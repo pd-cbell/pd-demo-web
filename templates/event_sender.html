@@ -9,7 +9,7 @@
 <body>
 <div class="container mt-4">
   <h1>Event Sender</h1>
-  <form method="POST" action="{{ url_for('event_sender') }}">
+  <form id="eventForm" method="POST" action="{{ url_for('event_sender') }}">
     <div class="form-group">
       <label for="organization">Organization</label>
       <select class="form-control" id="organization" name="organization" required>
@@ -29,8 +29,14 @@
       <label for="routing_key">PagerDuty Routing Key</label>
       <input type="text" class="form-control" id="routing_key" name="routing_key" required>
     </div>
-    <button type="submit" class="btn btn-primary">Send Events</button>
+    <button type="submit" id="sendButton" class="btn btn-primary">Send Events</button>
   </form>
+  <div id="progress" style="display: none; margin-top: 20px;">
+    <div class="progress">
+      <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width: 100%"></div>
+    </div>
+    <p id="progress-text">Sending events... Please wait.</p>
+  </div>
 </div>
 <script>
   // When organization is selected, fetch event files
@@ -47,6 +53,13 @@
       } else {
           $("#filename").html('<option value="">Select a file</option>');
       }
+  });
+  
+  $("#eventForm").submit(function(){
+      // Disable the submit button to prevent multiple submissions
+      $("#sendButton").prop("disabled", true);
+      // Show the progress indicator
+      $("#progress").show();
   });
 </script>
 </body>

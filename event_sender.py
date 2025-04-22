@@ -2,6 +2,7 @@ import os
 import json
 import logging
 import requests
+import time
 from flask import Flask, render_template, request, redirect, url_for
 
 PAGERDUTY_API_URL = "https://events.pagerduty.com/v2/enqueue"
@@ -81,16 +82,46 @@ def event_sender():
             logging.error(f"Error loading event file: {e}")
             return f"Error loading file: {e}", 500
         
-        # Process and send each event
+        # Process and send each event with delays and repeats
         results = []
         for event in events:
+            # Retrieve timing metadata and repeat schedule
+            timing = event.get("timing_metadata", {})
+            schedule_offset = timing.get("schedule_offset", 0)
+            repeat_schedule = event.get("repeat_schedule", [])
+            
+            # Delay sending based on schedule_offset
+            if schedule_offset:
+                logging.info(f"Delaying event send by {schedule_offset} seconds for event: {event.get('payload', {}).get('summary', 'N/A')}")
+                time.sleep(schedule_offset)
+            
+            # Prepare payload after delay
             payload = prepare_event_payload(event)
+            
+            # Send the initial event
             response = send_event(payload, routing_key)
             results.append({
                 "summary": event.get("payload", {}).get("summary", "N/A"),
                 "status_code": response.status_code,
-                "response": response.text
+                "response": response.text,
+                "attempt": "initial"
             })
+            
+            # Process each repeat schedule entry
+            for repeat in repeat_schedule:
+                repeat_count = repeat.get("repeat_count", 0)
+                repeat_offset = repeat.get("repeat_offset", 0)
+                for i in range(repeat_count):
+                    if repeat_offset:
+                        logging.info(f"Waiting {repeat_offset} seconds before repeat attempt {i+1} for event: {event.get('payload', {}).get('summary', 'N/A')}")
+                        time.sleep(repeat_offset)
+                    response = send_event(payload, routing_key)
+                    results.append({
+                        "summary": event.get("payload", {}).get("summary", "N/A"),
+                        "status_code": response.status_code,
+                        "response": response.text,
+                        "attempt": f"repeat {i+1}"
+                    })
         return render_template("event_sender_results.html", results=results)
     
     # For GET, render a form that lets the user select organization, event file, and enter a routing key.

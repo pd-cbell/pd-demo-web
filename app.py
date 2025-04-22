@@ -122,5 +122,64 @@ def download(org, filename):
     directory = os.path.join(app.config['GENERATED_FOLDER'], org)
     return send_from_directory(directory, filename, as_attachment=True)
 
+# New API endpoint for generation
+@app.route('/api/generate', methods=['POST'])
+def api_generate():
+    data = request.get_json() or request.form
+    scenario = data.get('scenario')
+    org_name = data.get('org_name')
+    itsm_tools = data.get('itsm_tools')
+    observability_tools = data.get('observability_tools')
+    api_key = data.get('api_key')
+    service_names = data.get('service_names')
+    
+    if not service_names:
+        if scenario == 'major':
+            service_names = "User Authentication, API Nodes, Payment Processing"
+        elif scenario == 'partial':
+            service_names = "API Nodes, Database"
+        elif scenario == 'well':
+            service_names = "Storage"
+    
+    if scenario == 'major':
+        narrative = utils.generate_major(org_name, api_key, itsm_tools, observability_tools)
+        outage_summary = utils.extract_outage_summary(narrative)
+        incident_details = utils.extract_incident_details(narrative)
+        events = utils.generate_major_events(org_name, api_key, itsm_tools, observability_tools, outage_summary, service_names, incident_details)
+    elif scenario == 'partial':
+        narrative = utils.generate_partial(org_name, api_key, itsm_tools, observability_tools)
+        outage_summary = utils.extract_outage_summary(narrative)
+        incident_details = utils.extract_incident_details(narrative)
+        events = utils.generate_partial_events(org_name, api_key, itsm_tools, observability_tools, outage_summary, service_names, incident_details)
+    elif scenario == 'well':
+        narrative = utils.generate_well(org_name, api_key, itsm_tools, observability_tools)
+        outage_summary = utils.extract_outage_summary(narrative)
+        incident_details = utils.extract_incident_details(narrative)
+        events = utils.generate_well_events(org_name, api_key, itsm_tools, observability_tools, outage_summary, service_names, incident_details)
+    else:
+        return {"message": "Invalid scenario selected."}, 400
+    
+    org_folder = os.path.join(app.config['GENERATED_FOLDER'], sanitize_org(org_name))
+    if not os.path.exists(org_folder):
+        os.makedirs(org_folder)
+    
+    timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    narrative_filename = f"{scenario}_{timestamp}.txt"
+    narrative_path = os.path.join(org_folder, narrative_filename)
+    with open(narrative_path, 'w') as f:
+        f.write(narrative)
+    
+    events_filename = f"{scenario}_events_{timestamp}.json"
+    events_path = os.path.join(org_folder, events_filename)
+    with open(events_path, 'w') as f:
+        f.write(events)
+    
+    return {
+        "message": f"Scenarios generated for organization: {org_name}",
+        "narrative_file": narrative_filename,
+        "events_file": events_filename,
+        "scenario": scenario
+    }, 200
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5001)
